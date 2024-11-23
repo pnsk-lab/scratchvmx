@@ -1,0 +1,19 @@
+{
+  "imports": {
+    "@pnsk-lab/sb3-types": "jsr:@pnsk-lab/sb3-types@^0.1.7",
+    "@turbowarp/types": "npm:@turbowarp/types@^0.0.12",
+    "fflate": "npm:fflate@^0.8.2",
+    "scratch-render": "npm:scratch-render@^1.2.119",
+    "vite": "npm:vite@^5.4.11"
+  },
+  "tasks": {
+    "dev": "deno run -A npm:vite"
+  },
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "lib": [
+      "deno.window",
+      "dom"
+    ]
+  }
+}
