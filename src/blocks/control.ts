@@ -1,4 +1,4 @@
-import type { BlockImpl } from "./types.ts";
+import type { BlockImpl } from './types.ts'
 
 export const control_forever: BlockImpl = {
   topLevel: false,
@@ -8,5 +8,5 @@ export const control_forever: BlockImpl = {
       return ''
     }
     return `while (true) { ${substack} \n yield null }`
-  }
+  },
 }

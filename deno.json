@@ -15,5 +15,9 @@
       "deno.window",
       "dom"
     ]
+  },
+  "fmt": {
+    "semiColons": false,
+    "singleQuote": true
   }
 }

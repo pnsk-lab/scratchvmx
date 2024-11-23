@@ -7,6 +7,6 @@ export const createBlocks = (): Record<string, BlockImpl> => {
   return {
     ...control,
     ...events,
-    ...motion
+    ...motion,
   }
 }

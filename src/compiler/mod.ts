@@ -1,11 +1,14 @@
-import type { Block, Target } from "@pnsk-lab/sb3-types"
-import { createBlocks } from "../blocks/mod.ts";
-import type { BlockImpl, NormalBlockImpl } from "../blocks/types.ts"
-
+import type { Block, Target } from '@pnsk-lab/sb3-types'
+import { createBlocks } from '../blocks/mod.ts'
+import type { BlockImpl, NormalBlockImpl } from '../blocks/types.ts'
 
 const blockImpls = createBlocks()
 
-const compileBlocks = (head: string, blocks: Target['blocks'], stop?: string) => {
+const compileBlocks = (
+  head: string,
+  blocks: Target['blocks'],
+  stop?: string,
+) => {
   let crr = head
 
   let body = ''
@@ -31,7 +34,7 @@ const compileBlocks = (head: string, blocks: Target['blocks'], stop?: string) =>
     }
 
     body += crrImpl.generate({
-      substacks
+      substacks,
     }) + `\n`
 
     if (!crrBlock.next) {
@@ -49,20 +52,22 @@ const compileTopLevel = (topLevel: Block, blocks: Target['blocks']) => {
   if (!next) {
     return ''
   }
-  const fn = `() => { ${compileBlocks(next, blocks)} }`
-  
+  const fn = `async function * () { ${compileBlocks(next, blocks)} }`
+
   return topLevelBlockImpl.generate({
-    substacks: {}
+    substacks: {},
   }, fn)
 }
 
 export const compile = (blocks: Target['blocks']) => {
+  const codes: string[] = []
   for (const block of Object.values(blocks)) {
     if (!('opcode' in block)) {
       continue
     }
     if (block.topLevel) {
-      console.log(compileTopLevel(block, blocks))
+      codes.push(compileTopLevel(block, blocks))
     }
   }
+  return codes
 }
