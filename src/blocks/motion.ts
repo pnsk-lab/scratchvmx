@@ -20,6 +20,12 @@ export const motion_turnright: BlockImpl = {
     return `vmdata.target.direction+=${args.inputs.DEGREES};yield 0;`
   },
 }
+export const motion_turnleft: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    return `vmdata.target.direction-=${args.inputs.DEGREES};yield 0;`
+  }
+}
 export const motion_ifonedgebounce: BlockImpl<'proc'> = {
   topLevel: false,
   generate(args) {

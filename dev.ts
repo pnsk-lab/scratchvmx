@@ -35,7 +35,7 @@ $load.onclick = async () => {
 }
 
 $state.innerHTML = 'Downloading default sb3...'
-const buff = await fetch('/project.sb3').then((res) => res.arrayBuffer())
+const buff = await fetch(`${(import.meta as unknown as ({ env: { BASE_URL: string}})).env.BASE_URL}project.sb3`).then((res) => res.arrayBuffer())
 
 const loadFromBufferOrJSON = async (sb3: ArrayBuffer | ScratchProject | Uint8Array) => {
   let project: Project
