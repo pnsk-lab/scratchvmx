@@ -111,7 +111,15 @@ export const motion_goto: BlockImpl = {
     `
   },
 }
-
+export const motion_gotoxy: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    return `
+      vmdata.target.x = ${args.inputs.X}
+      vmdata.target.y = ${args.inputs.Y}
+    `
+  },
+}
 export const motion_goto_menu: BlockImpl = {
   topLevel: false,
   generate(args) {
