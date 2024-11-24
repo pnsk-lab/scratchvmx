@@ -13,17 +13,21 @@ interface RunnerTargetInit {
 
 export class RunnerTarget {
   #drawableId: number
-  #skinIds: Map<string, number>
+  readonly costumes: {
+    skinId: number
+  }[]
 
   // Runner data
   x: number
   y: number
   direction: number
+  costume: number
 
   #lastDrawData: {
     x: number
     y: number
     direction: number
+    costume: number
   }
 
   #renderer: Render
@@ -43,14 +47,16 @@ export class RunnerTarget {
     this.x = 0
     this.y = 0
     this.direction = 90
+    this.costume = 0
 
     this.#lastDrawData = {
       x: this.x,
       y: this.y,
-      direction: this.direction
+      direction: this.direction,
+      costume: this.costume
     }
 
-    this.#skinIds = new Map(init.target.costumes.flatMap((costume) => {
+    this.costumes = init.target.costumes.flatMap((costume) => {
       const asset = init.runner.project.assets.get(costume.assetId)
       if (!asset) {
         return []
@@ -59,10 +65,11 @@ export class RunnerTarget {
         return []
       }
       const skinId = asset.ext === 'svg' ? this.#renderer.createSVGSkin(asset.svg) : init.runner.renderer.createBitmapSkin(asset.image)
-      return [[costume.assetId, skinId]]
-    }))
-
-    this.#renderer.updateDrawableSkinId(this.#drawableId, [...this.#skinIds][0][1])
+      return [{
+        skinId
+      }]
+    })
+    this.#renderer.updateDrawableSkinId(this.#drawableId, this.costumes[this.costume].skinId)
 
     this.#compiled = compile(this.#target.blocks)
       .map(code => ({
@@ -87,10 +94,14 @@ export class RunnerTarget {
       // Render direction
       this.#renderer.updateDrawableDirection(this.#drawableId, this.direction)
     }
+    if (this.costume !== this.#lastDrawData.costume) {
+      this.#renderer.updateDrawableSkinId(this.#drawableId, this.costumes[this.costume].skinId)
+    }
     this.#lastDrawData = {
       x: this.x,
       y: this.y,
-      direction: this.direction
+      direction: this.direction,
+      costume: this.costume
     }
   }
 

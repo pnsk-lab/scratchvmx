@@ -41,27 +41,30 @@ const compileBlocks = (
       } else {
         if (value[0] === 1 || value[0] === 2) {
           const primitive = value[1]
-          if (typeof primitive === 'string') {
-            throw new CompileError('Block reference have not be used out of SUBSTACK.')
-          }
           let input = 'null'
-          switch (primitive[0]) {
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-            case 9: {
-              // it's kind of numbers.
-              input = primitive[1].toString() // It's static.
-              break
+          if (typeof primitive === 'string') {
+            console.log(blocks[primitive])
+            throw new CompileError('Block reference have not be used out of SUBSTACK.')
+          } else {
+            switch (primitive[0]) {
+              case 4:
+              case 5:
+              case 6:
+              case 7:
+              case 8:
+              case 9: {
+                // it's kind of numbers.
+                input = primitive[1].toString() // It's static.
+                break
+              }
+              case 10:
+              case 11:
+              case 12:
+              case 13:
+                throw new CompileError(`Primitive type ${primitive[0]} is not supported.`)
             }
-            case 10:
-            case 11:
-            case 12:
-            case 13:
-              throw new CompileError(`Primitive type ${primitive[0]} is not supported.`)
           }
+
           inputs[key] = input
         } else {
           throw new CompileError('Obscured primitive is not supported.')
@@ -90,7 +93,7 @@ const compileTopLevel = (topLevel: Block, blocks: Target['blocks']) => {
   if (!next) {
     return ''
   }
-  const fn = `async function * () { ${compileBlocks(next, blocks)} }`
+  const fn = `async function * () { ${compileBlocks(next, blocks)}; yield null }`
 
   return topLevelBlockImpl.generate({
     substacks: {},

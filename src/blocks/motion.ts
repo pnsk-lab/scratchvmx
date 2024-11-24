@@ -10,20 +10,26 @@ export const motion_movesteps: BlockImpl = {
       const radians = (90 - vmdata.target.direction) * (Math.PI / 180)
       vmdata.target.x += step * Math.cos(radians)
       vmdata.target.y += step * Math.sin(radians)
-    } yield 0`
+    }`
   },
 }
 
 export const motion_turnright: BlockImpl = {
   topLevel: false,
   generate(args) {
-    return `vmdata.target.direction+=${args.inputs.DEGREES};yield 0;`
+    return `vmdata.target.direction+=${args.inputs.DEGREES};`
   },
+}
+export const motion_turnleft: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    return `vmdata.target.direction-=${args.inputs.DEGREES};`
+  }
 }
 export const motion_ifonedgebounce: BlockImpl<'proc'> = {
   topLevel: false,
   generate(args) {
-    return `${args.bindings.proc}(vmdata); yield 0;`
+    return `${args.bindings.proc}(vmdata);`
   },
   bindings: {
     proc(vmdata: VMData) {
@@ -81,4 +87,11 @@ export const motion_ifonedgebounce: BlockImpl<'proc'> = {
       vmdata.target.direction = (Math.atan2(dy, dx)) / (Math.PI / 180) + 90
     }
   }
+}
+export const motion_goto: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    console.log(args)
+    return ''
+  },
 }

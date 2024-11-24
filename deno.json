@@ -12,7 +12,8 @@
     "virtual:uno.css": "npm:@unocss/core"
   },
   "tasks": {
-    "dev": "deno run -A npm:vite"
+    "dev": "deno run -A npm:vite",
+    "build": "deno run -A npm:vite build"
   },
   "nodeModulesDir": "auto",
   "compilerOptions": {
