@@ -120,6 +120,12 @@ export const motion_gotoxy: BlockImpl = {
     `
   },
 }
+export const motion_pointindirection: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    return `vmdata.target.direction = ${args.inputs.DIRECTION};`
+  },
+}
 export const motion_goto_menu: BlockImpl = {
   topLevel: false,
   generate(args) {
