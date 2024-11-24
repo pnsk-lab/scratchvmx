@@ -29,14 +29,14 @@ export const compileBlock = (blockId: string, blocks: Target['blocks']) => {
 
   for (const [key, value] of Object.entries(block.inputs ?? {})) {
     if (key.startsWith('SUBSTACK')) {
+      if (!value[1]) {
+        substacks[key] = ''
+        continue
+      }
       const head = value[1].toString()
       const stop = blockId
       substacks[key] = compileBlocks(head, blocks, stop)
     } else {
-      if (value[0] !== 1 && value[0] !== 2) {
-        throw new CompileError('Obscured primitive is not supported.')
-      }
-
       let input = 'null'
 
       const primitive = value[1]

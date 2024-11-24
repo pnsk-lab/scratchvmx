@@ -88,28 +88,42 @@ export const motion_ifonedgebounce: BlockImpl<'proc'> = {
     },
   },
 }
-export const motion_goto: BlockImpl = {
+
+const getTargetXY = (target: string, vmdata: VMData) => {
+  switch (target) {
+    case '_random_':
+      return [
+        vmdata.runner.width * Math.random() - vmdata.runner.width / 2,
+        vmdata.runner.height * Math.random() - vmdata.runner.height / 2
+      ]
+    case '_mouse_':
+      return [
+        vmdata.runner.mouse.scratchX,
+        vmdata.runner.mouse.scratchY
+      ]
+    default: {
+      const { x, y } = vmdata.runner.getTargetFromName(target) ?? {}
+      return [
+        x ?? 0,
+        y ?? 0
+      ]
+    }
+  }
+}
+export const motion_goto: BlockImpl<'getTargetXY'> = {
   topLevel: false,
   generate(args) {
     return `
-    switch(${args.inputs.TO}) {
-      case '_random_':
-        vmdata.target.x = vmdata.runner.width * Math.random() - vmdata.runner.width / 2
-        vmdata.target.y = vmdata.runner.height * Math.random() - vmdata.runner.height / 2
-        break
-      case '_mouse_':
-        vmdata.target.x = vmdata.runner.mouse.scratchX
-        vmdata.target.y = vmdata.runner.mouse.scratchY
-        break
-      default:
-        const {x, y} = vmdata.runner.getTargetFromName(${args.inputs.TO}) ?? {}
-        if (x && y) {
-          vmdata.target.x = x
-          vmdata.target.y = y
-        }
+    {
+    const [x, y] = ${args.bindings.getTargetXY}(${args.inputs.TO}, vmdata)
+    vmdata.target.x = x
+    vmdata.target.y = y
     }
     `
   },
+  bindings: {
+    getTargetXY
+  }
 }
 export const motion_gotoxy: BlockImpl = {
   topLevel: false,
@@ -120,10 +134,24 @@ export const motion_gotoxy: BlockImpl = {
     `
   },
 }
+
+export const motion_pointtowards: BlockImpl<'getTargetXY'> = {
+  topLevel: false,
+  generate(args) {
+    console.log(args)
+    return `{
+      const [x, y] = ${args.bindings.getTargetXY}(${args.inputs.TOWARDS}, vmdata)
+      vmdata.target.direction = 360 - (Math.atan2(vmdata.target.y - y, vmdata.target.x - x) * 180 / Math.PI) - 90
+    }`
+  },
+  bindings: {
+    getTargetXY
+  }
+}
 export const motion_pointindirection: BlockImpl = {
   topLevel: false,
   generate(args) {
-    return `vmdata.target.direction = ${args.inputs.DIRECTION};`
+    return `vmdata.target.direction=${args.inputs.DIRECTION};`
   },
 }
 export const motion_goto_menu: BlockImpl = {
@@ -131,4 +159,38 @@ export const motion_goto_menu: BlockImpl = {
   generate(args) {
     return `"${args.fields.TO.replace('"', '\\"')}"`
   },
+}
+export const motion_pointtowards_menu: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    return `"${args.fields.TOWARDS.replace('"', '\\"')}"`
+  },
+}
+export const motion_changexby: BlockImpl = {
+  topLevel: false,
+  generate: (args) => `vmdata.target.x += ${args.inputs.DX}`
+}
+export const motion_changeyby: BlockImpl = {
+  topLevel: false,
+  generate: (args) => `vmdata.target.y += ${args.inputs.DY}`
+}
+export const motion_setx: BlockImpl = {
+  topLevel: false,
+  generate: (args) => `vmdata.target.x = ${args.inputs.X}`
+}
+export const motion_sety: BlockImpl = {
+  topLevel: false,
+  generate: (args) => `vmdata.target.y = ${args.inputs.Y}`
+}
+export const motion_xposition: BlockImpl = {
+  topLevel: false,
+  generate: () => `vmdata.target.x`
+}
+export const motion_yposition: BlockImpl = {
+  topLevel: false,
+  generate: () => `vmdata.target.y`
+}
+export const motion_direction: BlockImpl = {
+  topLevel: false,
+  generate: () => `vmdata.target.direction`
 }

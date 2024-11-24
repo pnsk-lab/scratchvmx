@@ -100,6 +100,7 @@ export class RunnerTarget {
     }
     if (this.direction !== this.#lastDrawData.direction) {
       // Render direction
+      this.direction = this.direction % 360
       this.#renderer.updateDrawableDirection(this.#drawableId, this.direction)
     }
     if (this.costume !== this.#lastDrawData.costume) {
