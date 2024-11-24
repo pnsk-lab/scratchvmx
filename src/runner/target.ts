@@ -17,6 +17,8 @@ export class RunnerTarget {
     skinId: number
   }[]
 
+  readonly name: string
+
   // Runner data
   x: number
   y: number
@@ -43,6 +45,7 @@ export class RunnerTarget {
     this.#drawableId = init.runner.renderer.createDrawable(init.target.name)
     this.#target = init.target
     this.#runner = init.runner
+    this.name = init.target.name
 
     this.x = 0
     this.y = 0
@@ -53,7 +56,7 @@ export class RunnerTarget {
       x: this.x,
       y: this.y,
       direction: this.direction,
-      costume: this.costume
+      costume: this.costume,
     }
 
     this.costumes = init.target.costumes.flatMap((costume) => {
@@ -64,17 +67,22 @@ export class RunnerTarget {
       if (asset.type !== 'image') {
         return []
       }
-      const skinId = asset.ext === 'svg' ? this.#renderer.createSVGSkin(asset.svg) : init.runner.renderer.createBitmapSkin(asset.image)
+      const skinId = asset.ext === 'svg'
+        ? this.#renderer.createSVGSkin(asset.svg)
+        : init.runner.renderer.createBitmapSkin(asset.image)
       return [{
-        skinId
+        skinId,
       }]
     })
-    this.#renderer.updateDrawableSkinId(this.#drawableId, this.costumes[this.costume].skinId)
+    this.#renderer.updateDrawableSkinId(
+      this.#drawableId,
+      this.costumes[this.costume].skinId,
+    )
 
     this.#compiled = compile(this.#target.blocks)
-      .map(code => ({
+      .map((code) => ({
         fn: new Function('vmdata', code) as ((vmdata: VMData) => void),
-        code
+        code,
       }))
   }
 
@@ -87,7 +95,7 @@ export class RunnerTarget {
       // Render position
       this.#renderer.updateDrawablePosition(this.#drawableId, [
         this.x,
-        this.y
+        this.y,
       ])
     }
     if (this.direction !== this.#lastDrawData.direction) {
@@ -95,20 +103,23 @@ export class RunnerTarget {
       this.#renderer.updateDrawableDirection(this.#drawableId, this.direction)
     }
     if (this.costume !== this.#lastDrawData.costume) {
-      this.#renderer.updateDrawableSkinId(this.#drawableId, this.costumes[this.costume].skinId)
+      this.#renderer.updateDrawableSkinId(
+        this.#drawableId,
+        this.costumes[this.costume].skinId,
+      )
     }
     this.#lastDrawData = {
       x: this.x,
       y: this.y,
       direction: this.direction,
-      costume: this.costume
+      costume: this.costume,
     }
   }
 
-  async * start () {
+  async *start() {
     const events = new Map<VMEvent, VMAsyncGeneratorFunction[]>()
     const blockImpls = createBlocks()
-  
+
     const vmdata: VMData = {
       target: this,
       on(type, listener) {
@@ -118,19 +129,21 @@ export class RunnerTarget {
         events.get(type)?.push(listener)
       },
       blockImpls,
-      runner: this.#runner
+      runner: this.#runner,
     }
     for (const { fn } of this.#compiled) {
       fn(vmdata)
     }
-    
+
     const runnings: AsyncGenerator[] = []
     for (const flag of events.get('flag') ?? []) {
       runnings.push(flag())
     }
-    
+
     while (true) {
-      const runningResults = await Promise.all(runnings.map(running => running.next()))
+      const runningResults = await Promise.all(
+        runnings.map((running) => running.next()),
+      )
       const indexesToRemove: number[] = []
       for (const [i, runningResult] of runningResults.entries()) {
         if (runningResult.done) {

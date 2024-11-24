@@ -3,6 +3,6 @@ import { presetUno } from '@unocss/preset-uno'
 
 export default {
   presets: [
-    presetUno()
+    presetUno(),
   ],
 } satisfies UserConfig

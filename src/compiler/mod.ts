@@ -5,6 +5,84 @@ import { CompileError } from './error.ts'
 
 const blockImpls = createBlocks()
 
+export const compileBlock = (blockId: string, blocks: Target['blocks']) => {
+  const block = blocks[blockId]
+  if (!('opcode' in block)) {
+    throw new CompileError('TopLevelPrimitive is not supported.')
+  }
+
+  const crrImpl = blockImpls[block.opcode] as NormalBlockImpl
+
+  if (!crrImpl) {
+    throw new CompileError(`The block ${block.opcode} is not implmented.`)
+  }
+
+  // Generate Args
+  const substacks: Record<string, string> = {}
+  const inputs: Record<string, string> = {}
+  const fields: Record<string, string> = {}
+  const bindings: Record<string, string> = Object.fromEntries(
+    Object.keys(crrImpl.bindings ?? {}).map(
+      (key) => [key, `vmdata.blockImpls.${block.opcode}.bindings.${key}`],
+    ),
+  )
+
+  for (const [key, value] of Object.entries(block.inputs ?? {})) {
+    if (key.startsWith('SUBSTACK')) {
+      const head = value[1].toString()
+      const stop = blockId
+      substacks[key] = compileBlocks(head, blocks, stop)
+    } else {
+      if (value[0] !== 1 && value[0] !== 2) {
+        throw new CompileError('Obscured primitive is not supported.')
+      }
+
+      let input = 'null'
+
+      const primitive = value[1]
+      if (typeof primitive === 'string') {
+        // Block
+        input = compileBlock(primitive, blocks)
+      } else {
+        // Literal
+        switch (primitive[0]) {
+          case 4:
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+          case 9: {
+            // it's kind of numbers.
+            input = primitive[1].toString() // It's static.
+            break
+          }
+          case 10:
+          case 11:
+          case 12:
+          case 13:
+            throw new CompileError(
+              `Primitive type ${primitive[0]} is not supported.`,
+            )
+        }
+      }
+      inputs[key] = input
+    }
+  }
+  for (const [key, [value, value2]] of Object.entries(block.fields ?? {})) {
+    fields[key] = value
+    if (value2) {
+      throw new CompileError('I don\t know all of fields! Pleace teach me!')
+    }
+  }
+
+  return crrImpl.generate({
+    inputs,
+    fields,
+    substacks,
+    bindings,
+  })
+}
+
 const compileBlocks = (
   head: string,
   blocks: Target['blocks'],
@@ -15,70 +93,17 @@ const compileBlocks = (
   let body = ''
   while (true) {
     const crrBlock = blocks[crr]
-    if (!('opcode' in crrBlock)) {
-      break
-    }
     if (crr === stop) {
       break
     }
 
-    const crrImpl = blockImpls[crrBlock.opcode] as NormalBlockImpl
+    body += compileBlock(crr, blocks) + '\n'
 
-    if (!crrImpl) {
-      throw new CompileError(`The block ${crrBlock.opcode} is not implmented.`)
-    }
-
-    // Generate Args
-    const substacks: Record<string, string> = {}
-    const inputs: Record<string, string> = {}
-    const bindings: Record<string, string> = Object.fromEntries(Object.keys(crrImpl.bindings ?? {}).map(key => [key, `vmdata.blockImpls.${crrBlock.opcode}.bindings.${key}`]))
-
-    for (const [key, value] of Object.entries(crrBlock.inputs ?? {})) {
-      if (key.startsWith('SUBSTACK')) {
-        const head = value[1].toString()
-        const stop = crr
-        substacks[key] = compileBlocks(head, blocks, stop)
-      } else {
-        if (value[0] === 1 || value[0] === 2) {
-          const primitive = value[1]
-          if (typeof primitive === 'string') {
-            throw new CompileError('Block reference have not be used out of SUBSTACK.')
-          }
-          let input = 'null'
-          switch (primitive[0]) {
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-            case 9: {
-              // it's kind of numbers.
-              input = primitive[1].toString() // It's static.
-              break
-            }
-            case 10:
-            case 11:
-            case 12:
-            case 13:
-              throw new CompileError(`Primitive type ${primitive[0]} is not supported.`)
-          }
-          inputs[key] = input
-        } else {
-          throw new CompileError('Obscured primitive is not supported.')
-        }
-      }
-    }
-
-    body += crrImpl.generate({
-      substacks,
-      inputs,
-      bindings,
-    }) + `\n`
-
-    if (!crrBlock.next) {
+    const next = (crrBlock as Block).next
+    if (!next) {
       break
     }
-    crr = crrBlock.next
+    crr = next
   }
 
   return body
@@ -90,13 +115,16 @@ const compileTopLevel = (topLevel: Block, blocks: Target['blocks']) => {
   if (!next) {
     return ''
   }
-  const fn = `async function * () { ${compileBlocks(next, blocks)}; yield null }`
+  const fn = `async function * () { ${
+    compileBlocks(next, blocks)
+  }; yield null }`
 
   return topLevelBlockImpl.generate({
-    substacks: {},
     inputs: {},
+    fields: {},
+    substacks: {},
     bindings: {},
-    fn
+    fn,
   })
 }
 

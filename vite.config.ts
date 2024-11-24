@@ -3,10 +3,10 @@ import UnoCSS from '@unocss/vite'
 
 export default defineConfig({
   plugins: [
-    UnoCSS()
+    UnoCSS(),
   ],
   build: {
-    target: ['esnext']
+    target: ['esnext'],
   },
   esbuild: {
     target: 'esnext',

@@ -4,7 +4,7 @@
  */
 
 import type { ScratchProject } from '@pnsk-lab/sb3-types'
-import type { Project, Asset } from '../types.ts'
+import type { Asset, Project } from '../types.ts'
 
 export type FileTree = {
   [path: string]: Uint8Array
@@ -12,15 +12,18 @@ export type FileTree = {
 
 const decoder = new TextDecoder()
 
-const processAsset = async (name: string, input: ArrayBuffer): Promise<Asset> => {
+const processAsset = async (
+  name: string,
+  input: ArrayBuffer,
+): Promise<Asset> => {
   const [assetId, ext] = name.split('.')
 
-  switch(ext) {
+  switch (ext) {
     case 'svg':
       return {
         type: 'image',
         ext,
-        svg: decoder.decode(input)
+        svg: decoder.decode(input),
       }
     case 'png':
     case 'gif':
@@ -28,13 +31,15 @@ const processAsset = async (name: string, input: ArrayBuffer): Promise<Asset> =>
       return {
         type: 'image',
         ext,
-        image: await new Promise<HTMLImageElement>(resolve => {
+        image: await new Promise<HTMLImageElement>((resolve) => {
           const image = new Image()
           image.onload = () => resolve(image)
-          image.src = URL.createObjectURL(new Blob([input], {
-            type: 'image'
-          }))
-        })
+          image.src = URL.createObjectURL(
+            new Blob([input], {
+              type: 'image',
+            }),
+          )
+        }),
       }
     case 'wav':
     case 'mp3':
@@ -66,7 +71,7 @@ export const loadSb3 = async (fileTree: FileTree): Promise<Project> => {
 
   return {
     json: projectJSON,
-    assets
+    assets,
   }
 }
 
@@ -81,14 +86,22 @@ export const loadJSON = async (json: ScratchProject): Promise<Project> => {
     }
   }
 
-  const assets = new Map(await Promise.all([...assetIds].map(async (assetId): Promise<[string, Asset]> => [
-    assetId.split('.')[0],
-    await processAsset(assetId, await fetch(`https://cdn.assets.scratch.mit.edu/internalapi/asset/${assetId}/get/`).then(res => res.arrayBuffer()))
-  ])))
+  const assets = new Map(
+    await Promise.all(
+      [...assetIds].map(async (assetId): Promise<[string, Asset]> => [
+        assetId.split('.')[0],
+        await processAsset(
+          assetId,
+          await fetch(
+            `https://cdn.assets.scratch.mit.edu/internalapi/asset/${assetId}/get/`,
+          ).then((res) => res.arrayBuffer()),
+        ),
+      ]),
+    ),
+  )
 
-  
   return {
     json,
-    assets
+    assets,
   }
 }
