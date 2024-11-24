@@ -24,6 +24,10 @@ const compileBlocks = (
 
     const crrImpl = blockImpls[crrBlock.opcode] as NormalBlockImpl
 
+    if (!crrImpl) {
+      throw new CompileError(`The block ${crrBlock.opcode} is not implmented.`)
+    }
+
     // Generate Args
     const substacks: Record<string, string> = {}
     const inputs: Record<string, string> = {}

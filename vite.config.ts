@@ -1,3 +1,8 @@
 import { defineConfig } from 'vite'
+import UnoCSS from '@unocss/vite'
 
-export default defineConfig({})
+export default defineConfig({
+  plugins: [
+    UnoCSS()
+  ]
+})

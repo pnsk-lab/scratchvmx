@@ -11,6 +11,8 @@ export type Asset = {
   svg: string
 } | {
   type: 'image'
-  ext: 'png' | 'jpg'
+  ext: 'png' | 'jpg' | 'gif'
   image: HTMLImageElement
+} | {
+  type: 'audio'
 }

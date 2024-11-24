@@ -5,13 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>
-      eruda.init()
-      eruda.show()
-    </script>
+    <script>eruda.init()</script>
   </head>
   <body>
-    <canvas id="canvas"></canvas>
+    <div class="grid grid-cols-2 place-items-center h-dvh">
+      <div>
+        <label>
+          Load Project URL:
+          <div class="flex items-center">
+            https://scratch.mit.edu/projects/
+            <input id="projectID" type="number" class="border">
+          </div>
+        </label>
+        <button id="load" class="border p-1 rounded-full hover:drop-shadow-md">Load</button>
+        <div id="state"></div>
+      </div>
+      <div class="p-2 grid h-full">
+        <div>
+          <canvas id="canvas" class="w-full border"></canvas>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/dev.ts"></script>
   </body>
 </html>

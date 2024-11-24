@@ -25,6 +25,8 @@ export class Runner {
   readonly height: number
   readonly renderer: Render
   readonly project: Project
+
+  #runnerTargets: RunnerTarget[]
   constructor(init: RunnerInit) {
     this.#init = init
     this.project = init.project
@@ -33,25 +35,21 @@ export class Runner {
     this.width = init.width ?? 480
     this.height = init.height ?? 360
     this.renderer.resize(this.width, this.height)
-  }
 
-  async start() {
     const projectJSON = this.project.json
 
     this.renderer.setLayerGroupOrdering(projectJSON.targets.map((target) => target.name))
 
-    const target = new RunnerTarget({
-      target: projectJSON.targets[1],
+    this.#runnerTargets = projectJSON.targets.map(target => new RunnerTarget({
+      target,
       runner: this,
-    })
-
-    const generator = target.start()
-
+    }))
+  }
+  async start() {
+    const generators = this.#runnerTargets.map(target => target.start())
+  
     while (true) {
-      const { done } = await generator.next()
-      if (done) {
-        return
-      }
+      await Promise.all(generators.map(generator => generator.next()))
       this.renderer.draw()
       await new Promise(requestAnimationFrame)
     }

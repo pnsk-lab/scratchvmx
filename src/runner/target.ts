@@ -5,7 +5,6 @@ import { compile } from '../compiler/mod.ts'
 import type { VMData, VMEvent } from './types.ts'
 import type { VMAsyncGeneratorFunction } from './types.ts'
 import { createBlocks } from '../blocks/mod.ts'
-import type { Rectangle } from 'scratch-render'
 
 interface RunnerTargetInit {
   runner: Runner
@@ -72,7 +71,7 @@ export class RunnerTarget {
       }))
   }
 
-  getBounds(): Rectangle {
+  getBounds() {
     return this.#renderer.getBounds(this.#drawableId)
   }
 
@@ -115,7 +114,7 @@ export class RunnerTarget {
     }
     
     const runnings: AsyncGenerator[] = []
-    for (const flag of events.get('flag')!) {
+    for (const flag of events.get('flag') ?? []) {
       runnings.push(flag())
     }
     
