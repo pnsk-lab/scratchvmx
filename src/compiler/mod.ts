@@ -90,7 +90,7 @@ const compileTopLevel = (topLevel: Block, blocks: Target['blocks']) => {
   if (!next) {
     return ''
   }
-  const fn = `async function * () { ${compileBlocks(next, blocks)} }`
+  const fn = `async function * () { ${compileBlocks(next, blocks)}; yield null }`
 
   return topLevelBlockImpl.generate({
     substacks: {},

@@ -7,6 +7,6 @@ export const control_forever: BlockImpl = {
     if (!substack) {
       return ''
     }
-    return `while (true) { ${substack} }`
+    return `while (true) { ${substack}; yield null }`
   },
 }
