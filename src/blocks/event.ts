@@ -2,7 +2,7 @@ import type { BlockImpl } from './types.ts'
 
 export const event_whenflagclicked: BlockImpl = {
   topLevel: true,
-  generate(_args, fn) {
-    return `vmdata.on('flag', ${fn})`
+  generate(args) {
+    return `vmdata.on('flag', ${args.fn})`
   },
 }

@@ -8,17 +8,31 @@ import type { VMData } from './types.ts'
 export interface RunnerInit {
   canvas: HTMLCanvasElement
   project: Project
+
+  /**
+   * @defaults 480
+   */
+  width?: number
+  /**
+   * @defaults 360
+   */
+  height?: number
 }
 
 export class Runner {
   #init: RunnerInit
+  readonly width: number
+  readonly height: number
   readonly renderer: Render
   readonly project: Project
   constructor(init: RunnerInit) {
     this.#init = init
-    this.renderer = new Render(init.canvas)
-    this.renderer.resize(480, 360)
     this.project = init.project
+    this.renderer = new Render(init.canvas)
+
+    this.width = init.width ?? 480
+    this.height = init.height ?? 360
+    this.renderer.resize(this.width, this.height)
   }
 
   async start() {
@@ -31,10 +45,15 @@ export class Runner {
       runner: this,
     })
 
-    const step = () => {
+    const generator = target.start()
+
+    while (true) {
+      const { done } = await generator.next()
+      if (done) {
+        return
+      }
       this.renderer.draw()
-      requestAnimationFrame(step)
+      await new Promise(requestAnimationFrame)
     }
-    step()
   }
 }

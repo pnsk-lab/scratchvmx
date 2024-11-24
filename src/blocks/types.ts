@@ -1,14 +1,20 @@
-export interface TopLevelBlockImpl {
+export interface TopLevelBlockImpl<T extends string = never> {
   topLevel: true
-  generate(args: Args, fn: string): string
+  generate(args: Args<T> & {
+    fn: string
+  }): string
+  bindings?: Record<T, unknown>
 }
-export interface NormalBlockImpl {
+export interface NormalBlockImpl<T extends string = never> {
   topLevel: false
-  generate(args: Args): string
+  generate(args: Args<T>): string
+  bindings?: Record<T, unknown>
 }
-export type BlockImpl = TopLevelBlockImpl | NormalBlockImpl
 
-export interface Args {
-  inputs?: {}
+export type BlockImpl<T extends string = never> = TopLevelBlockImpl<T> | NormalBlockImpl<T>
+
+export interface Args<T extends string> {
+  inputs: Record<string, string>
   substacks: Record<string, string>
+  bindings: Record<T, string>
 }
