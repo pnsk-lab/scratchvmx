@@ -194,3 +194,7 @@ export const motion_direction: BlockImpl = {
   topLevel: false,
   generate: () => `vmdata.target.direction`
 }
+export const motion_setrotationstyle: BlockImpl = {
+  topLevel: false,
+  generate: (args) => `vmdata.target.rotationStyle = "${args.fields.STYLE}";`
+}

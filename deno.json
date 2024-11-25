@@ -8,8 +8,8 @@
     "@unocss/vite": "npm:@unocss/vite@^0.64.1",
     "fflate": "npm:fflate@^0.8.2",
     "scratch-render": "npm:scratch-render@^1.2.119",
-    "vite": "npm:vite@^5.4.11",
-    "virtual:uno.css": "npm:@unocss/core"
+    "virtual:uno.css": "npm:@unocss/core",
+    "vite": "npm:vite@^5.4.11"
   },
   "tasks": {
     "dev": "deno run -A npm:vite",

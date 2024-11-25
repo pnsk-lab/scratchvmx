@@ -71,16 +71,22 @@ export class Runner {
     return null
   }
 
+  readonly abortController = new AbortController()
+
   async start() {
-    const generators = this.#runnerTargets.map((target) => target.start())
+    const generators = this.#runnerTargets.map((target) => target.start(this.abortController))
 
     while (true) {
       await Promise.all(generators.map((generator) => generator.next()))
       this.renderer.draw()
+      if (this.abortController.signal.aborted) {
+        break
+      }
       await new Promise(requestAnimationFrame)
     }
   }
   cleanup() {
     this.mouse.unmount()
+    this.abortController.abort()
   }
 }

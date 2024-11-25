@@ -24,13 +24,7 @@ export class RunnerTarget {
   y: number
   direction: number
   costume: number
-
-  #lastDrawData: {
-    x: number
-    y: number
-    direction: number
-    costume: number
-  }
+  rotationStyle: 'all around' | 'left-right' | 'don\'t rocate'
 
   #renderer: Render
   #target: Sprite | Stage
@@ -46,18 +40,12 @@ export class RunnerTarget {
     this.#target = init.target
     this.#runner = init.runner
     this.name = init.target.name
+    this.rotationStyle = 'all around'
 
     this.x = 0
     this.y = 0
     this.direction = 90
     this.costume = 0
-
-    this.#lastDrawData = {
-      x: this.x,
-      y: this.y,
-      direction: this.direction,
-      costume: this.costume,
-    }
 
     this.costumes = init.target.costumes.flatMap((costume) => {
       const asset = init.runner.project.assets.get(costume.assetId)
@@ -91,33 +79,43 @@ export class RunnerTarget {
   }
 
   render() {
-    if (this.x !== this.#lastDrawData.x || this.y !== this.#lastDrawData.y) {
-      // Render position
-      this.#renderer.updateDrawablePosition(this.#drawableId, [
-        this.x,
-        this.y,
-      ])
+    // Render position
+    this.#renderer.updateDrawablePosition(this.#drawableId, [
+      this.x,
+      this.y,
+    ])
+  
+    // Render direction and scale
+    this.direction = this.direction % 360
+    if (this.direction > 180) {
+      this.direction = -(360 - this.direction)
     }
-    if (this.direction !== this.#lastDrawData.direction) {
-      // Render direction
-      this.direction = this.direction % 360
-      this.#renderer.updateDrawableDirection(this.#drawableId, this.direction)
+    let resultDirection = this.direction
+    const resultScale = [100, 100]
+
+    switch (this.rotationStyle) {
+      case 'all around':
+        break
+      case 'left-right':
+        if (resultDirection < 0) {
+          resultDirection = 90
+          resultScale[0] *= -1
+        }
+        resultDirection = 90
+        break
+      case 'don\'t rocate':
+        resultDirection = 90
     }
-    if (this.costume !== this.#lastDrawData.costume) {
-      this.#renderer.updateDrawableSkinId(
-        this.#drawableId,
-        this.costumes[this.costume].skinId,
-      )
-    }
-    this.#lastDrawData = {
-      x: this.x,
-      y: this.y,
-      direction: this.direction,
-      costume: this.costume,
-    }
+    this.#renderer.updateDrawableDirectionScale(this.#drawableId, resultDirection,
+      // @ts-expect-error Turbowarp types bug
+      resultScale)
+    this.#renderer.updateDrawableSkinId(
+      this.#drawableId,
+      this.costumes[this.costume].skinId,
+    )
   }
 
-  async *start() {
+  async *start(abortController: AbortController) {
     const events = new Map<VMEvent, VMAsyncGeneratorFunction[]>()
     const blockImpls = createBlocks()
 
@@ -154,7 +152,7 @@ export class RunnerTarget {
       for (const indexToRemove of indexesToRemove.reverse()) {
         runnings.splice(indexToRemove, 1)
       }
-      if (runnings.length === 0) {
+      if (runnings.length === 0 || abortController.signal.aborted) {
         break
       }
       this.render()
