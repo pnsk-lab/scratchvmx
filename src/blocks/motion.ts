@@ -1,5 +1,6 @@
 import type { BlockImpl } from './types.ts'
 import type { VMData } from '../runner/types.ts'
+import { Block } from '@pnsk-lab/sb3-types'
 
 export const motion_movesteps: BlockImpl = {
   topLevel: false,
@@ -197,4 +198,54 @@ export const motion_direction: BlockImpl = {
 export const motion_setrotationstyle: BlockImpl = {
   topLevel: false,
   generate: (args) => `vmdata.target.rotationStyle = "${args.fields.STYLE}";`
+}
+
+const glideTo = async function * (vmdata: VMData, x: number, y: number, time: number) {
+  const startTime = Date.now()
+  const finishTime = startTime + time*1000
+
+  const initialX = vmdata.target.x
+  const initialY = vmdata.target.y
+
+  const dx = (x - initialX) / time / 1000
+  const dy = (y - initialY) / time / 1000
+
+  while (true) {
+    const now = Date.now()
+    vmdata.target.x = (now - startTime) * dx + initialX
+    vmdata.target.y = (now - startTime) * dy + initialY
+    yield null
+    if (now > finishTime) {
+      break
+    }
+  }
+}
+
+export const motion_glideto: BlockImpl<'glideTo' | 'getTargetXY'> = {
+  topLevel: false,
+  generate(args) {
+    return `{
+      const [x, y] = ${args.bindings.getTargetXY}(${args.inputs.TO}, vmdata)
+      for await (const _ of ${args.bindings.glideTo}(vmdata, x, y, ${args.inputs.SECS})) {
+        yield _
+      } 
+    }`
+  },
+  bindings: {
+    glideTo,
+    getTargetXY
+  }
+}
+export const motion_glideto_menu = motion_goto_menu
+
+export const motion_glidesecstoxy: BlockImpl<'glideTo'> = {
+  topLevel: false,
+  generate(args) {
+    return `for await (const _ of ${args.bindings.glideTo}(vmdata, ${args.inputs.X}, ${args.inputs.Y}, ${args.inputs.SECS})) {
+      yield _
+    }`
+  },
+  bindings: {
+    glideTo
+  }
 }
