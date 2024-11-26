@@ -56,7 +56,11 @@ export const compileBlock = (blockId: string, blocks: Target['blocks']) => {
             input = primitive[1].toString() // It's static.
             break
           }
-          case 10:
+          case 10: {
+            // It's kind of string.
+            input = `"${primitive[1].toString().replace('"', '\\"')}"` // It's static.
+            break
+          }
           case 11:
           case 12:
           case 13:
