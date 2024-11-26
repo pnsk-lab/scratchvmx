@@ -95,18 +95,18 @@ const getTargetXY = (target: string, vmdata: VMData) => {
     case '_random_':
       return [
         vmdata.runner.width * Math.random() - vmdata.runner.width / 2,
-        vmdata.runner.height * Math.random() - vmdata.runner.height / 2
+        vmdata.runner.height * Math.random() - vmdata.runner.height / 2,
       ]
     case '_mouse_':
       return [
         vmdata.runner.mouse.scratchX,
-        vmdata.runner.mouse.scratchY
+        vmdata.runner.mouse.scratchY,
       ]
     default: {
       const { x, y } = vmdata.runner.getTargetFromName(target) ?? {}
       return [
         x ?? 0,
-        y ?? 0
+        y ?? 0,
       ]
     }
   }
@@ -123,8 +123,8 @@ export const motion_goto: BlockImpl<'getTargetXY'> = {
     `
   },
   bindings: {
-    getTargetXY
-  }
+    getTargetXY,
+  },
 }
 export const motion_gotoxy: BlockImpl = {
   topLevel: false,
@@ -139,15 +139,14 @@ export const motion_gotoxy: BlockImpl = {
 export const motion_pointtowards: BlockImpl<'getTargetXY'> = {
   topLevel: false,
   generate(args) {
-    console.log(args)
     return `{
       const [x, y] = ${args.bindings.getTargetXY}(${args.inputs.TOWARDS}, vmdata)
       vmdata.target.direction = 360 - (Math.atan2(vmdata.target.y - y, vmdata.target.x - x) * 180 / Math.PI) - 90
     }`
   },
   bindings: {
-    getTargetXY
-  }
+    getTargetXY,
+  },
 }
 export const motion_pointindirection: BlockImpl = {
   topLevel: false,
@@ -169,40 +168,45 @@ export const motion_pointtowards_menu: BlockImpl = {
 }
 export const motion_changexby: BlockImpl = {
   topLevel: false,
-  generate: (args) => `vmdata.target.x += ${args.inputs.DX}`
+  generate: (args) => `vmdata.target.x += ${args.inputs.DX}`,
 }
 export const motion_changeyby: BlockImpl = {
   topLevel: false,
-  generate: (args) => `vmdata.target.y += ${args.inputs.DY}`
+  generate: (args) => `vmdata.target.y += ${args.inputs.DY}`,
 }
 export const motion_setx: BlockImpl = {
   topLevel: false,
-  generate: (args) => `vmdata.target.x = ${args.inputs.X}`
+  generate: (args) => `vmdata.target.x = ${args.inputs.X}`,
 }
 export const motion_sety: BlockImpl = {
   topLevel: false,
-  generate: (args) => `vmdata.target.y = ${args.inputs.Y}`
+  generate: (args) => `vmdata.target.y = ${args.inputs.Y}`,
 }
 export const motion_xposition: BlockImpl = {
   topLevel: false,
-  generate: () => `vmdata.target.x`
+  generate: () => `vmdata.target.x`,
 }
 export const motion_yposition: BlockImpl = {
   topLevel: false,
-  generate: () => `vmdata.target.y`
+  generate: () => `vmdata.target.y`,
 }
 export const motion_direction: BlockImpl = {
   topLevel: false,
-  generate: () => `vmdata.target.direction`
+  generate: () => `vmdata.target.direction`,
 }
 export const motion_setrotationstyle: BlockImpl = {
   topLevel: false,
-  generate: (args) => `vmdata.target.rotationStyle = "${args.fields.STYLE}";`
+  generate: (args) => `vmdata.target.rotationStyle = "${args.fields.STYLE}";`,
 }
 
-const glideTo = async function * (vmdata: VMData, x: number, y: number, time: number) {
+const glideTo = async function* (
+  vmdata: VMData,
+  x: number,
+  y: number,
+  time: number,
+) {
   const startTime = Date.now()
-  const finishTime = startTime + time*1000
+  const finishTime = startTime + time * 1000
 
   const initialX = vmdata.target.x
   const initialY = vmdata.target.y
@@ -233,8 +237,8 @@ export const motion_glideto: BlockImpl<'glideTo' | 'getTargetXY'> = {
   },
   bindings: {
     glideTo,
-    getTargetXY
-  }
+    getTargetXY,
+  },
 }
 export const motion_glideto_menu = motion_goto_menu
 
@@ -246,6 +250,6 @@ export const motion_glidesecstoxy: BlockImpl<'glideTo'> = {
     }`
   },
   bindings: {
-    glideTo
-  }
+    glideTo,
+  },
 }
