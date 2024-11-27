@@ -7,6 +7,6 @@ export const operator_equals: BlockImpl<'isEquals'> = {
     return `${args.bindings.isEquals}(${args.inputs.OPERAND1}, ${args.inputs.OPERAND2})`
   },
   bindings: {
-    isEquals
-  }
+    isEquals,
+  },
 }

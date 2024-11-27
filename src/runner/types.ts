@@ -5,6 +5,7 @@ import type { RunnerTarget } from './target.ts'
 export type VMEvent = 'flag'
 export type VMAsyncGenerator = AsyncGenerator<VMData>
 export type VMAsyncGeneratorFunction = () => VMAsyncGenerator
+export type VMBlocksInitializer = (vmdata: VMData) => void
 
 export interface VMData {
   target: RunnerTarget

@@ -80,7 +80,7 @@ const loadFromBufferOrJSON = async (
     throw error
   }
   $state.textContent = 'Starting!'
-  runner.start()
+  runner.flag()
 }
 
 const defaultProjectID = location.hash.slice(1)

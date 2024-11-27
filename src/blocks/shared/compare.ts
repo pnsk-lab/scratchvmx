@@ -6,7 +6,10 @@ export const isEquals = (a: Value, b: Value): boolean => {
   const strA = String(a)
   const strB = String(b)
 
-  if ((strA === 'Infinity' && strB === 'Infinity') || (strA === '-Infinity' && strB === '-Infinity')) {
+  if (
+    (strA === 'Infinity' && strB === 'Infinity') ||
+    (strA === '-Infinity' && strB === '-Infinity')
+  ) {
     return true
   }
 

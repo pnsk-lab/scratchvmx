@@ -49,7 +49,6 @@ export const looks_switchbackdropto: BlockImpl = {
   generate(args) {
     return `{
       const target = ${args.inputs.BACKDROP}
-      console.log(target)
       let i
       switch (target) {
         case 'next backdrop':

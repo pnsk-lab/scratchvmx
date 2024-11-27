@@ -1,10 +1,6 @@
 import type { Sprite, Stage } from '@pnsk-lab/sb3-types'
 import type { Runner } from '../mod.ts'
 import type { Render } from '../renderer.ts'
-import { compile } from '../compiler/mod.ts'
-import type { VMData, VMEvent } from './types.ts'
-import type { VMAsyncGeneratorFunction } from './types.ts'
-import { createBlocks } from '../blocks/mod.ts'
 import { SPRITE_LAYER, STAGE_LAYER } from './constants.ts'
 
 interface RunnerTargetInit {
@@ -159,10 +155,6 @@ export class RunnerTarget {
   readonly bubble: Bubble
   #renderer: Render
   #target: Sprite | Stage
-  #compiled: {
-    fn(vmdata: VMData): void
-    code: string
-  }[]
   #runner: Runner
 
   readonly isStage: boolean
@@ -210,12 +202,6 @@ export class RunnerTarget {
       this.drawableId,
       this.costumes[this.costume].skinId,
     )
-
-    this.#compiled = compile(this.#target.blocks)
-      .map((code) => ({
-        fn: new Function('vmdata', code) as ((vmdata: VMData) => void),
-        code,
-      }))
   }
 
   getBounds() {
@@ -276,49 +262,5 @@ export class RunnerTarget {
     this.#renderer.updateDrawableVisible(this.drawableId, !this.isHidden)
 
     this.bubble.render()
-  }
-
-  async *start(abortController: AbortController) {
-    const events = new Map<VMEvent, VMAsyncGeneratorFunction[]>()
-    const blockImpls = createBlocks()
-
-    const vmdata: VMData = {
-      target: this,
-      on(type, listener) {
-        if (!events.has(type)) {
-          events.set(type, [])
-        }
-        events.get(type)?.push(listener)
-      },
-      blockImpls,
-      runner: this.#runner,
-    }
-    for (const { fn } of this.#compiled) {
-      fn(vmdata)
-    }
-
-    const runnings: AsyncGenerator[] = []
-    for (const flag of events.get('flag') ?? []) {
-      runnings.push(flag())
-    }
-
-    while (true) {
-      const runningResults = await Promise.all(
-        runnings.map((running) => running.next()),
-      )
-      const indexesToRemove: number[] = []
-      for (const [i, runningResult] of runningResults.entries()) {
-        if (runningResult.done) {
-          indexesToRemove.push(i)
-        }
-      }
-      for (const indexToRemove of indexesToRemove.reverse()) {
-        runnings.splice(indexToRemove, 1)
-      }
-      if (runnings.length === 0 || abortController.signal.aborted) {
-        break
-      }
-      yield null
-    }
   }
 }

@@ -7,8 +7,8 @@ export const control_wait: BlockImpl<'waitForSec'> = {
     return `for await (const _ of ${args.bindings.waitForSec}(${args.inputs.DURATION})) { yield _ }`
   },
   bindings: {
-    waitForSec
-  }
+    waitForSec,
+  },
 }
 export const control_repeat: BlockImpl = {
   topLevel: false,

@@ -142,5 +142,5 @@ export const compile = (blocks: Target['blocks']) => {
       codes.push(compileTopLevel(block, blocks))
     }
   }
-  return codes
+  return codes.join('\n')
 }
