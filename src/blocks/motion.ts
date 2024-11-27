@@ -216,10 +216,12 @@ const glideTo = async function* (
 
   while (true) {
     const now = Date.now()
-    vmdata.target.x = (now - startTime) * dx + initialX
-    vmdata.target.y = (now - startTime) * dy + initialY
+    vmdata.target.x = Math.floor((now - startTime) * dx + initialX)
+    vmdata.target.y = Math.floor((now - startTime) * dy + initialY)
     yield null
     if (now > finishTime) {
+      vmdata.target.x = x
+      vmdata.target.x = y
       break
     }
   }
