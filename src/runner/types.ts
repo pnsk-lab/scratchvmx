@@ -2,7 +2,7 @@ import type { BlockImpl } from '../blocks/types.ts'
 import type { Runner } from './mod.ts'
 import type { RunnerTarget } from './target.ts'
 
-export type VMEvent = 'flag'
+export type VMEvent = 'flag' | 'cloned'
 export type VMAsyncGenerator = AsyncGenerator<VMData>
 export type VMAsyncGeneratorData = {
   generator: VMAsyncGenerator

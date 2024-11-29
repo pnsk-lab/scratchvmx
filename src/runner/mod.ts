@@ -37,7 +37,7 @@ export class Runner {
   readonly project: Project
 
   readonly mouse: Mouse
-  #runnerTargets?: RunnerTarget[]
+  runnerTargets?: RunnerTarget[]
   stage?: RunnerTarget
 
   #compiled: Map<string, VMBlocksInitializer>
@@ -104,14 +104,22 @@ export class Runner {
     this.#targetId++
     const initializer = this.#compiled.get(runnerTarget.name)
     if (!initializer) throw new Error('Initializer is undefined.')
-    this.#runnerTargets?.push(runnerTarget)
+    const targetId = this.#targetId.toString()
+    runnerTarget.targetId = targetId
+    this.runnerTargets?.push(runnerTarget)
     const addEvent: VMInitializerAddEvent = (type, listener) => {
-      const listeners = this.#runnableGenerators.get(type)
       const data: VMAsyncGeneratorFunctionData = {
         fn: listener,
-        targetId: this.#targetId.toString(),
+        targetId,
         target: runnerTarget,
       }
+      if (type === 'cloned') {
+        if (runnerTarget.isClone) {
+          this.#startFn(data)
+        }
+        return
+      }
+      const listeners = this.#runnableGenerators.get(type)
       if (listeners){
         listeners.push(data)
       } else {
@@ -132,7 +140,7 @@ export class Runner {
     this.#runnableGenerators = new Map()
     this.runningGenerators = []
 
-    this.#runnerTargets = []
+    this.runnerTargets = []
     for (const target of this.#init.project.json.targets) {
       const runnerTarget = new RunnerTarget({
         runner: this,
@@ -161,7 +169,7 @@ export class Runner {
       for (const index of removeIndexes.reverse()) {
         this.runningGenerators.splice(index, 0)
       }
-      for (const target of this.#runnerTargets ?? []) {
+      for (const target of this.runnerTargets ?? []) {
         target.render()
       }
       this.renderer.draw()
@@ -183,7 +191,7 @@ export class Runner {
     if (cached) {
       return cached
     }
-    const got = this.#runnerTargets?.find((target) => target.name === name)
+    const got = this.runnerTargets?.find((target) => target.name === name)
     if (got) {
       this.#cachedTargetFromName.set(name, got)
       return got

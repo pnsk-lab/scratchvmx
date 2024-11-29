@@ -114,6 +114,9 @@ const compileBlocks = (
 }
 const compileTopLevel = (topLevel: Block, blocks: Target['blocks']) => {
   const topLevelBlockImpl = blockImpls[topLevel.opcode]
+  if (!topLevelBlockImpl) {
+    throw new CompileError(`The hat block ${topLevel.opcode} is not implmented.`)
+  }
 
   const next = topLevel.next
   if (!next) {

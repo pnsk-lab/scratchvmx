@@ -83,9 +83,13 @@ export const control_stop: BlockImpl = {
 export const control_create_clone_of: BlockImpl = {
   topLevel: false,
   generate(args) {
-    console.log(args.inputs.CLONE_OPTION)
     return `
-      vmdata.target.createClone()
+      {
+        const CLONE_OPTION = ${args.inputs.CLONE_OPTION}
+        ;(CLONE_OPTION === '_myself_'
+        ? vmdata.target
+        : vmdata.runner.getTargetFromName(CLONE_OPTION)).createClone()  
+      }
     `
   },
 }
@@ -93,5 +97,19 @@ export const control_create_clone_of_menu: BlockImpl = {
   topLevel: false,
   generate(args) {
     return `"${args.fields.CLONE_OPTION.replace('"', '\\"')}"`
+  },
+}
+export const control_start_as_clone: BlockImpl = {
+  topLevel: true,
+  generate(args) {
+    return `addEvent('cloned', ${args.fn})`
+  },
+}
+export const control_delete_this_clone: BlockImpl = {
+  topLevel: false,
+  generate() {
+    return `if (vmdata.target.isClone) {
+      vmdata.target.remove()
+    }`
   },
 }

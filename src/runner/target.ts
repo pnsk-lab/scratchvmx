@@ -2,7 +2,6 @@ import type { Sprite, Stage } from '@pnsk-lab/sb3-types'
 import { Runner } from '../mod.ts'
 import type { Render } from '../renderer.ts'
 import { SPRITE_LAYER, STAGE_LAYER } from './constants.ts'
-import { throws } from 'assert'
 
 interface RunnerTargetInit {
   runner: Runner
@@ -165,16 +164,19 @@ export class RunnerTarget {
   #renderer: Render
   #target: Sprite | Stage
   #runner: Runner
+  #layer: string
 
   readonly isStage: boolean
 
   effects: Effects
 
+  isClone: boolean
+
+  targetId?: string
   constructor(init: RunnerTargetInit) {
     this.#renderer = init.runner.renderer
-    this.drawableId = init.runner.renderer.createDrawable(
-      init.target.isStage ? STAGE_LAYER : SPRITE_LAYER,
-    )
+    this.#layer = init.target.isStage ? STAGE_LAYER : SPRITE_LAYER
+    this.drawableId = init.runner.renderer.createDrawable(this.#layer)
     this.#target = init.target
     this.#runner = init.runner
     this.name = init.target.name
@@ -190,6 +192,8 @@ export class RunnerTarget {
     this.direction = init.direction ?? 90
     this.costume = init.costume ?? 0
     this.#scale = init.scale ?? 100
+
+    this.isClone = init.isClone
 
     this.costumes = init.target.costumes.flatMap((costume) => {
       const asset = init.runner.project.assets.get(costume.assetId)
@@ -213,6 +217,15 @@ export class RunnerTarget {
     )
   }
 
+  remove() {
+    this.#runner.runningGenerators = this.#runner.runningGenerators.filter(thread => thread.targetId !== this.targetId)
+    this.#runner.runnerTargets = this.#runner.runnerTargets?.filter(target => target.targetId !== this.targetId)
+    this.#renderer.destroyDrawable(this.drawableId, this.#layer)
+    for (const costume of this.costumes) {
+      this.#renderer.destroySkin(costume.skinId)
+    }
+  }
+
   createClone() {
     if (this.#target.isStage) {
       // Stages can't create clones.
@@ -229,7 +242,6 @@ export class RunnerTarget {
       scale: this.scale
     })
     this.#runner.createTarget(clone)
-    console.log('clone')
   }
 
   getBounds() {
