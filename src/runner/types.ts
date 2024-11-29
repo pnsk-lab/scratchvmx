@@ -4,14 +4,28 @@ import type { RunnerTarget } from './target.ts'
 
 export type VMEvent = 'flag'
 export type VMAsyncGenerator = AsyncGenerator<VMData>
-export type VMAsyncGeneratorFunction = () => VMAsyncGenerator
-export type VMBlocksInitializer = (vmdata: VMData) => void
+export type VMAsyncGeneratorData = {
+  generator: VMAsyncGenerator
+  targetId: string
+  generatorId: string
+}
+export type VMAsyncGeneratorFunction = (vmdata: VMData) => VMAsyncGenerator
+export type VMAsyncGeneratorFunctionData = {
+  fn: VMAsyncGeneratorFunction
+  targetId: string
+  target: RunnerTarget
+}
+export interface VMInitializerAddEvent {
+  (type: VMEvent, listener: VMAsyncGeneratorFunction): void
+}
+export type VMBlocksInitializer = (addEvent: VMInitializerAddEvent) => void
 
 export interface VMData {
   target: RunnerTarget
-  on(type: VMEvent, listener: VMAsyncGeneratorFunction): void
   blockImpls: Record<string, BlockImpl>
   runner: Runner
+  targetId: string
+  generatorId: string
 }
 export type YieldResult = {
   waitMode: 'frame'

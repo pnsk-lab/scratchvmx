@@ -7,9 +7,12 @@ import { SPRITE_LAYER, STAGE_LAYER } from './constants.ts'
 import { RunnerTarget } from './target.ts'
 import type {
   VMAsyncGenerator,
+  VMAsyncGeneratorData,
   VMAsyncGeneratorFunction,
+  VMAsyncGeneratorFunctionData,
   VMBlocksInitializer,
   VMData,
+  VMInitializerAddEvent,
 } from './types.ts'
 
 export interface RunnerInit {
@@ -39,6 +42,8 @@ export class Runner {
 
   #compiled: Map<string, VMBlocksInitializer>
 
+  readonly blockImpls = createBlocks()
+
   constructor(init: RunnerInit) {
     this.#init = init
     this.project = init.project
@@ -65,20 +70,37 @@ export class Runner {
     for (const target of init.project.json.targets) {
       this.#compiled.set(
         target.name,
-        new Function('vmdata', compile(target.blocks)) as VMBlocksInitializer,
+        new Function('addEvent', compile(target.blocks)) as VMBlocksInitializer,
       )
     }
   }
 
+  #generatorId: number = 0
+  #startFn(data: VMAsyncGeneratorFunctionData) {
+    this.#generatorId ++
+    const vmdata: VMData = {
+      blockImpls: this.blockImpls,
+      runner: this,
+      target: data.target,
+      generatorId: this.#generatorId.toString(),
+      targetId: data.targetId,
+    }
+    this.runningGenerators.push({
+      generator: data.fn(vmdata),
+      targetId: data.targetId,
+      generatorId: vmdata.generatorId
+    })
+  }
+
   flag() {
     this.#startRunning()
-    for (const fn of this.#runnableGenerators.get('flag') ?? []) {
-      this.#runningGenerators.push(fn())
+    for (const data of this.#runnableGenerators.get('flag') ?? []) {
+      this.#startFn(data)
     }
   }
 
-  #runnableGenerators: Map<string, VMAsyncGeneratorFunction[]> = new Map()
-  #runningGenerators: VMAsyncGenerator[] = []
+  #runnableGenerators: Map<string, VMAsyncGeneratorFunctionData[]> = new Map()
+  runningGenerators: VMAsyncGeneratorData[] = []
   #isStarted = false
   #startRunning() {
     if (this.#isStarted) {
@@ -86,12 +108,12 @@ export class Runner {
     }
     this.#isStarted = true
     this.#runnableGenerators = new Map()
-    this.#runningGenerators = []
-
-    const blockImpls = createBlocks()
+    this.runningGenerators = []
 
     this.#runnerTargets = []
+    let targetIdCrr = 0
     for (const target of this.#init.project.json.targets) {
+      targetIdCrr ++
       const initializer = this.#compiled.get(target.name)
       if (!initializer) {
         throw new Error('Initializer is undefined.')
@@ -104,27 +126,28 @@ export class Runner {
         this.stage = runnerTarget
       }
       this.#runnerTargets.push(runnerTarget)
-      const vmdata: VMData = {
-        blockImpls,
-        runner: this,
-        target: runnerTarget,
-        on: (type, listener) => {
+      
+      const addEvent: VMInitializerAddEvent = (type, listener) => {
           const listeners = this.#runnableGenerators.get(type)
-          if (listeners) {
-            listeners.push(listener)
-          } else {
-            this.#runnableGenerators.set(type, [listener])
+          const data: VMAsyncGeneratorFunctionData = {
+            fn: listener,
+            targetId: targetIdCrr.toString(),
+            target: runnerTarget
           }
-        },
+          if (listeners) {
+            listeners.push(data)
+          } else {
+            this.#runnableGenerators.set(type, [data])
+          }
       }
-      initializer(vmdata)
+      initializer(addEvent)
     }
 
     const step = async () => {
       const removeIndexes = []
       for (
         const [i, { done }]
-          of (await Promise.all(this.#runningGenerators.map((g) => g.next())))
+          of (await Promise.all(this.runningGenerators.map((g) => g.generator.next())))
             .entries()
       ) {
         if (done) {
@@ -132,15 +155,22 @@ export class Runner {
         }
       }
       for (const index of removeIndexes.reverse()) {
-        this.#runningGenerators.splice(index, 0)
+        this.runningGenerators.splice(index, 0)
       }
       for (const target of this.#runnerTargets ?? []) {
         target.render()
       }
       this.renderer.draw()
+      if (this.abortController.signal.aborted) {
+        return
+      }
       requestAnimationFrame(step)
     }
     step()
+  }
+
+  stop() {
+    this.runningGenerators = []
   }
 
   #cachedTargetFromName = new Map<string, RunnerTarget>()

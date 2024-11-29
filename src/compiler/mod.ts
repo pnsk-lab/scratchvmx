@@ -119,7 +119,7 @@ const compileTopLevel = (topLevel: Block, blocks: Target['blocks']) => {
   if (!next) {
     return ''
   }
-  const fn = `async function * () { ${
+  const fn = `async function * (vmdata) { ${
     compileBlocks(next, blocks)
   }; yield null }`
 

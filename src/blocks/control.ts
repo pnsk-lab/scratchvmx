@@ -65,3 +65,18 @@ export const control_repeat_until: BlockImpl = {
     }`
   },
 }
+export const control_stop: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    const { STOP_OPTION } = args.fields
+    switch(STOP_OPTION) {
+      case 'all':
+        return 'vmdata.runner.stop()'
+      case 'this script':
+        return 'return'
+      case 'other scripts in sprite':
+        return 'vmdata.runner.runningGenerators = vmdata.runner.runningGenerators.filter(thread => !(thread.targetId === vmdata.targetId && thread.generatorId !== vmdata.generatorId))'
+    }
+    return ''
+  },
+}
