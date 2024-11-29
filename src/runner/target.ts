@@ -1,11 +1,20 @@
 import type { Sprite, Stage } from '@pnsk-lab/sb3-types'
-import type { Runner } from '../mod.ts'
+import { Runner } from '../mod.ts'
 import type { Render } from '../renderer.ts'
 import { SPRITE_LAYER, STAGE_LAYER } from './constants.ts'
+import { throws } from 'assert'
 
 interface RunnerTargetInit {
   runner: Runner
   target: Sprite | Stage
+
+  isClone: boolean
+
+  x?: number
+  y?: number
+  scale?: number
+  direction?: number
+  costume?: number
 }
 
 class Bubble {
@@ -176,11 +185,11 @@ export class RunnerTarget {
 
     this.bubble = new Bubble(this, this.#runner)
 
-    this.x = 0
-    this.y = 0
-    this.direction = 90
-    this.costume = 0
-    this.#scale = 100
+    this.x = init.x ?? 0
+    this.y = init.y ?? 0
+    this.direction = init.direction ?? 90
+    this.costume = init.costume ?? 0
+    this.#scale = init.scale ?? 100
 
     this.costumes = init.target.costumes.flatMap((costume) => {
       const asset = init.runner.project.assets.get(costume.assetId)
@@ -202,6 +211,25 @@ export class RunnerTarget {
       this.drawableId,
       this.costumes[this.costume].skinId,
     )
+  }
+
+  createClone() {
+    if (this.#target.isStage) {
+      // Stages can't create clones.
+      return
+    }
+    const clone = new RunnerTarget({
+      isClone: true,
+      runner: this.#runner,
+      target: this.#target,
+      costume: this.costume,
+      direction: this.direction,
+      x: this.x,
+      y: this.y,
+      scale: this.scale
+    })
+    this.#runner.createTarget(clone)
+    console.log('clone')
   }
 
   getBounds() {

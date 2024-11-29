@@ -221,7 +221,7 @@ const glideTo = async function* (
     yield null
     if (now > finishTime) {
       vmdata.target.x = x
-      vmdata.target.x = y
+      vmdata.target.y = y
       break
     }
   }

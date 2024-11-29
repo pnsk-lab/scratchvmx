@@ -77,7 +77,7 @@ export class Runner {
 
   #generatorId: number = 0
   #startFn(data: VMAsyncGeneratorFunctionData) {
-    this.#generatorId ++
+    this.#generatorId++
     const vmdata: VMData = {
       blockImpls: this.blockImpls,
       runner: this,
@@ -88,7 +88,7 @@ export class Runner {
     this.runningGenerators.push({
       generator: data.fn(vmdata),
       targetId: data.targetId,
-      generatorId: vmdata.generatorId
+      generatorId: vmdata.generatorId,
     })
   }
 
@@ -97,6 +97,28 @@ export class Runner {
     for (const data of this.#runnableGenerators.get('flag') ?? []) {
       this.#startFn(data)
     }
+  }
+
+  #targetId: number = 0
+  createTarget(runnerTarget: RunnerTarget) {
+    this.#targetId++
+    const initializer = this.#compiled.get(runnerTarget.name)
+    if (!initializer) throw new Error('Initializer is undefined.')
+    this.#runnerTargets?.push(runnerTarget)
+    const addEvent: VMInitializerAddEvent = (type, listener) => {
+      const listeners = this.#runnableGenerators.get(type)
+      const data: VMAsyncGeneratorFunctionData = {
+        fn: listener,
+        targetId: this.#targetId.toString(),
+        target: runnerTarget,
+      }
+      if (listeners){
+        listeners.push(data)
+      } else {
+        this.#runnableGenerators.set(type, [data])
+      }
+    }
+    initializer(addEvent)
   }
 
   #runnableGenerators: Map<string, VMAsyncGeneratorFunctionData[]> = new Map()
@@ -111,43 +133,25 @@ export class Runner {
     this.runningGenerators = []
 
     this.#runnerTargets = []
-    let targetIdCrr = 0
     for (const target of this.#init.project.json.targets) {
-      targetIdCrr ++
-      const initializer = this.#compiled.get(target.name)
-      if (!initializer) {
-        throw new Error('Initializer is undefined.')
-      }
       const runnerTarget = new RunnerTarget({
         runner: this,
         target,
+        isClone: false,
       })
       if (target.isStage) {
         this.stage = runnerTarget
       }
-      this.#runnerTargets.push(runnerTarget)
-      
-      const addEvent: VMInitializerAddEvent = (type, listener) => {
-          const listeners = this.#runnableGenerators.get(type)
-          const data: VMAsyncGeneratorFunctionData = {
-            fn: listener,
-            targetId: targetIdCrr.toString(),
-            target: runnerTarget
-          }
-          if (listeners) {
-            listeners.push(data)
-          } else {
-            this.#runnableGenerators.set(type, [data])
-          }
-      }
-      initializer(addEvent)
+      this.createTarget(runnerTarget)
     }
 
     const step = async () => {
       const removeIndexes = []
       for (
         const [i, { done }]
-          of (await Promise.all(this.runningGenerators.map((g) => g.generator.next())))
+          of (await Promise.all(
+            this.runningGenerators.map((g) => g.generator.next()),
+          ))
             .entries()
       ) {
         if (done) {

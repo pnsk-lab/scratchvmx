@@ -80,3 +80,18 @@ export const control_stop: BlockImpl = {
     return ''
   },
 }
+export const control_create_clone_of: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    console.log(args.inputs.CLONE_OPTION)
+    return `
+      vmdata.target.createClone()
+    `
+  },
+}
+export const control_create_clone_of_menu: BlockImpl = {
+  topLevel: false,
+  generate(args) {
+    return `"${args.fields.CLONE_OPTION.replace('"', '\\"')}"`
+  },
+}
